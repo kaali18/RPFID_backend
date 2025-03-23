@@ -1,26 +1,24 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
-const path = require('path');
 const app = express();
-const port = process.env.PORT || 3000; // Use environment port for cloud hosting
+const port = process.env.PORT || 3000; // Render assigns PORT dynamically
 
 // Middleware
 app.use(express.text()); // Parse raw text from Flutter (e.g., "12345,2025-03-22 10:00")
-app.use(cors()); // Enable CORS for cross-origin requests
-app.use(express.json()); // For JSON requests (e.g., updates)
+app.use(cors()); // Allow cross-origin requests
+app.use(express.json()); // Parse JSON for PUT requests
 
-// SQLite Database Setup
-const dbPath = process.env.NODE_ENV === 'production' ? '/data/attendance.db' : './attendance.db';
-const db = new sqlite3.Database(dbPath, (err) => {
+// In-memory SQLite database
+const db = new sqlite3.Database(':memory:', (err) => {
   if (err) {
     console.error('Error connecting to SQLite:', err);
   } else {
-    console.log('Connected to SQLite database');
+    console.log('Connected to SQLite (in-memory)');
   }
 });
 
-// Create attendance table if it doesn’t exist
+// Create attendance table (recreated on each restart)
 db.run(`
   CREATE TABLE IF NOT EXISTS attendance (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,7 +26,13 @@ db.run(`
     timestamp TEXT NOT NULL,
     classId TEXT DEFAULT 'CLASS001'
   )
-`);
+`, (err) => {
+  if (err) {
+    console.error('Error creating table:', err);
+  } else {
+    console.log('Attendance table created');
+  }
+});
 
 // Helper function to parse incoming data
 const parseAttendanceData = (data) => {
@@ -50,7 +54,7 @@ app.post('/attendance', (req, res) => {
 
   db.run(
     'INSERT INTO attendance (studentId, timestamp, classId) VALUES (?, ?, ?)',
-    [studentId, timestamp, 'CLASS001'], // Replace 'CLASS001' with dynamic classId if needed
+    [studentId, timestamp, 'CLASS001'], // Replace 'CLASS001' with dynamic value if needed
     (err) => {
       if (err) {
         console.error('Error inserting data:', err);
@@ -72,7 +76,7 @@ app.get('/attendance', (req, res) => {
   });
 });
 
-// GET: Retrieve attendance by studentId or date
+// GET: Search attendance by studentId or date
 app.get('/attendance/search', (req, res) => {
   const { studentId, date } = req.query;
   let query = 'SELECT * FROM attendance WHERE 1=1';
@@ -131,7 +135,7 @@ app.delete('/attendance/:id', (req, res) => {
   });
 });
 
-// Start the sever
+// Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
