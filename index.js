@@ -2,7 +2,7 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const app = express();
-const port = process.env.PORT || 3000; // Render assigns PORT dynamically
+const port = process.env.PORT || 10000; // Render assigns PORT dynamically
 
 // Middleware
 app.use(express.text()); // Parse raw text from Flutter (e.g., "12345,2025-03-22 10:00")
