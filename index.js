@@ -3,7 +3,7 @@ const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
 const app = express();
-const port = process.env.PORT || 10000; // Use environment port for cloud hosting
+const port = process.env.PORT || 3000; // Use environment port for cloud hosting
 
 // Middleware
 app.use(express.text()); // Parse raw text from Flutter (e.g., "12345,2025-03-22 10:00")
